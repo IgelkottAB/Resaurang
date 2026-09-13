@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Igelkotts restaurang – webblagring</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<aside class="sidebar">
+  <div class="brand">🍽️ <span>Igelkotts restaurang</span></div>
+  <button class="nav active" data-view="tables">🪑 Bord</button>
+  <button class="nav" data-view="kitchen">👨‍🍳 Kök</button>
+  <button class="nav" data-view="menu">🍔 Meny</button>
+  <button class="nav" data-view="bookings">📅 Bokningar</button>
+  <button class="nav" data-view="inventory">📦 Lager</button>
+  <button class="nav" data-view="staff">👥 Personal</button>
+  <button class="nav" data-view="stats">📊 Statistik</button>
+  <div class="sidebar-bottom">
+    <div class="storage">☁️ Kundorder via webben<br><small>livekanal + lokal backup</small></div>
+    <button id="resetData" class="danger-link">Återställ testdata</button>
+  </div>
+</aside>
+
+<main class="main">
+<header class="topbar">
+  <div><h1 id="pageTitle">Bordsöversikt</h1><p id="dateText"></p></div>
+  <div class="top-actions"><div id="serverBell" class="bell hidden">🔔 <span id="bellText"></span></div><button id="newOrderBtn" class="primary">＋ Ny beställning</button></div>
+</header>
+
+<section id="tablesView" class="view">
+  <div class="toolbar"><div><h2>Alla bord</h2><p>Beställningar sparas automatiskt i webbläsaren.</p></div></div>
+  <div class="tables-grid" id="tablesGrid"></div>
+</section>
+
+<section id="kitchenView" class="view hidden">
+  <div class="toolbar"><div><h2>Kök</h2><p>Kocken kan markera order som klar för servering.</p></div></div>
+  <div id="kitchenList" class="cards"></div>
+</section>
+
+<section id="menuView" class="view hidden">
+  <div class="toolbar"><div><h2>Meny</h2><p>Lägg till, ändra eller ta bort rätter. Sök i menyn vid beställning.</p></div><button class="primary" id="addItemBtn">＋ Lägg till rätt</button></div>
+  <div id="menuList" class="menu-admin"></div>
+</section>
+
+<section id="bookingsView" class="view hidden">
+  <div class="toolbar"><div><h2>Bokningar</h2><p>Enkel bokningslista för demo.</p></div><button class="primary" id="addBookingBtn">＋ Ny bokning</button></div>
+  <div id="bookingList" class="cards"></div>
+</section>
+
+<section id="inventoryView" class="view hidden">
+  <div class="toolbar"><div><h2>Lager</h2><p>Testlager med lågt-lager-varningar.</p></div><button class="primary" id="addStockBtn">＋ Lägg till lagerpost</button></div>
+  <div id="inventoryList" class="cards"></div>
+</section>
+
+<section id="staffView" class="view hidden">
+  <div class="toolbar"><div><h2>Personal & roller</h2><p>Demolista över personal.</p></div></div>
+  <div id="staffList" class="cards"></div>
+</section>
+
+<section id="statsView" class="view hidden">
+  <div class="toolbar"><div><h2>Statistik</h2><p>Registrerad försäljning.</p></div></div>
+  <div id="statsCards" class="stats-cards"></div>
+  <div class="panel"><h3>Senaste betalningar</h3><div id="salesList"></div></div>
+</section>
+</main>
+
+<div id="orderModal" class="modal hidden"><div class="modal-card order-card">
+  <div class="modal-head"><div><span class="eyebrow">Beställning</span><h2 id="orderTitle">Bord 1</h2></div><button class="close" data-close="orderModal">×</button></div>
+  <div class="order-tools"><input id="menuSearch" placeholder="🔎 Sök rätt..."><select id="moveTable"><option value="">Flytta bord...</option></select><button id="parkOrder" class="secondary">⏸ Parkera</button></div>
+  <div class="order-layout">
+    <div class="menu-picker"><div class="category-tabs" id="categoryTabs"></div><div id="menuPicker" class="menu-picker-grid"></div></div>
+    <div class="current-order"><h3>Aktuell nota</h3><div id="orderItems" class="order-items"></div><textarea id="orderNote" placeholder="Kommentar till köket..."></textarea>
+      <div class="total-row"><span>Summa</span><strong id="orderTotal">0 kr</strong></div>
+      <div class="order-actions"><button class="secondary" id="saveOrder">Spara</button><button class="primary" id="sendKitchen">Skicka till köket</button><button class="primary" id="payOrder">Till kassan</button></div>
+    </div>
+  </div>
+</div></div>
+
+<div id="paymentModal" class="modal hidden"><div class="modal-card payment-card">
+  <div class="modal-head"><div><span class="eyebrow">Kassa</span><h2 id="paymentTitle">Betalning</h2></div><button class="close" data-close="paymentModal">×</button></div>
+  <div class="payment-total" id="paymentTotal">0 kr</div>
+  <label>Rabatt (%)<input id="discountInput" type="number" min="0" max="100" value="0"></label>
+  <div class="payment-methods"><button class="payment-method active" data-method="Kort">💳 Kort</button><button class="payment-method" data-method="Kontant">💵 Kontant</button><button class="payment-method" data-method="Swish">📱 Swish</button></div>
+  <div id="cardBox" class="pay-box"><label>Demo-kortkod (4 siffror)<input id="cardCode" inputmode="numeric" maxlength="4" placeholder="1234"></label><div id="cardCustomer" class="hint"></div></div>
+  <div id="cashBox" class="pay-box hidden"><label>Kund betalar<input id="cashGiven" type="number" min="0" step="1" placeholder="0"></label><div class="cash-buttons"><button data-cash="100">100</button><button data-cash="200">200</button><button data-cash="500">500</button><button data-cash="1000">1000</button></div><div class="change" id="changeText">Växel: –</div></div>
+  <div id="swishBox" class="pay-box hidden"><div class="qr" id="qr"></div><strong>Swish till: Igelkotts restaurang</strong><div class="demo">DEMO – EJ RIKTIG BETALNING</div></div>
+  <div class="final-row"><span>Att betala</span><strong id="finalTotal">0 kr</strong></div><button class="primary full" id="completePayment">✓ Genomför betalning</button>
+</div></div>
+
+<div id="itemModal" class="modal hidden"><div class="modal-card small-card">
+  <div class="modal-head"><h2 id="itemModalTitle">Lägg till rätt</h2><button class="close" data-close="itemModal">×</button></div>
+  <input type="hidden" id="editItemId"><label>Namn<input id="itemName"></label><label>Kategori<input id="itemCategory"></label><label>Pris (kr)<input id="itemPrice" type="number" min="0"></label><label>Emoji<input id="itemEmoji" placeholder="🍽️"></label>
+  <button class="primary full" id="saveMenuItem">Spara rätt</button>
+</div></div>
+
+<div id="bookingModal" class="modal hidden"><div class="modal-card small-card">
+  <div class="modal-head"><h2>Ny bokning</h2><button class="close" data-close="bookingModal">×</button></div>
+  <label>Namn<input id="bookingName"></label><label>Datum<input id="bookingDate" type="date"></label><label>Tid<input id="bookingTime" type="time"></label><label>Antal<input id="bookingParty" type="number" min="1" value="2"></label>
+  <button class="primary full" id="saveBooking">Spara bokning</button>
+</div></div>
+
+<div id="stockModal" class="modal hidden"><div class="modal-card small-card">
+  <div class="modal-head"><h2>Lagerpost</h2><button class="close" data-close="stockModal">×</button></div>
+  <label>Artikel<input id="stockName"></label><label>Antal<input id="stockQty" type="number" min="0" value="0"></label><label>Miniminivå<input id="stockMin" type="number" min="0" value="5"></label>
+  <button class="primary full" id="saveStock">Spara lagerpost</button>
+</div></div>
+
+<div id="toast" class="toast hidden"></div>
+<script src="ntfy-config.js"></script><script src="script.js"></script>
+</body></html>
